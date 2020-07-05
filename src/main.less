@@ -1,0 +1,41 @@
+/*
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software Foundation,
+ * Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301, USA.
+ *
+ * The Original Code is Copyright (C) 2020 Michael Gallagher
+ */
+
+@gradientColor1: #222244;
+@gradientColor2: #000010;
+
+@font-face {
+  font-family: "Audiowide";
+  src: url("/assets/fonts/Audiowide-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Open Sans";
+  src: url("/assets/fonts/OpenSans-Light.ttf") format("truetype");
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: @gradientColor2;
+  background-image: linear-gradient(-20deg, @gradientColor1 , @gradientColor2 15%, @gradientColor2 85%, @gradientColor1);
+}
+canvas {
+  margin: 0;
+  display: block;
+}

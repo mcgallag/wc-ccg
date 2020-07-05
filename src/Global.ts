@@ -21,7 +21,8 @@
  */
 export const Palette = {
   Background: 0x000010,
-  BackgroundHighlight: 0x222244,
+  BackgroundMedium: 0x1B1B36,
+  BackgroundHightlight: 0x30305F,
   Highlight: 0xD1E000,
   Bright: 0xF1FF33,
   Dim: 0x858F00

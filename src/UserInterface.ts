@@ -17,10 +17,33 @@
  */
 
 import { game } from "./main";
-import { Card } from "./Card";
 import { Palette, Layers } from "./Global";
 import * as PIXI from 'pixi.js';
 import gsap from "gsap";
+
+/**
+ * Displays a target for card drag and drop
+ * No interactivity currently implemented
+ */
+class CardTarget extends PIXI.Graphics {
+  // private _card: Card | null = null;
+
+  /**
+   * 
+   * @param angle number of degrees by which to rotate
+   */
+  constructor(angle: number = 0) {
+    const width = 108;
+    const height = 158;
+    super();
+    this.lineStyle(4, Palette.BackgroundHightlight)
+      .beginFill(Palette.Background)
+      .drawRoundedRect(0, 0, width, height, 4);
+    this.pivot.set(width / 2, height / 2);
+    this.angle = angle;
+    this.zIndex = Layers.UIBackground+1;
+  }
+}
 
 /**
  * Encapsulates and contains UI elements
@@ -30,14 +53,14 @@ export class UserInterface extends PIXI.Container {
 
   private playerPowerPoints: PIXI.Text;
   private opponentPowerPoints: PIXI.Text;
-  private playerCarrier: Card;
-  private opponentCarrier: Card;
 
-  private navPointTL: Card;
-  private navPointTR: Card;
-  private navPointC: Card;
-  private navPointBL: Card;
-  private navPointBR: Card;
+  private targetPlayerCarrier: CardTarget;
+  private targetOpponentCarrier: CardTarget;
+  private targetTL: CardTarget;
+  private targetTR: CardTarget;
+  private targetC: CardTarget;
+  private targetBL: CardTarget;
+  private targetBR: CardTarget;
 
   //TODO: break up into individual lines so we can highlight individually later
   private navPointLines: PIXI.Graphics;
@@ -79,83 +102,71 @@ export class UserInterface extends PIXI.Container {
     this.addChild(this.opponentPowerPoints);
 
     // player's carrier card
-    this.playerCarrier = new Card(game.loader.resources["assets/wc-ccg-confed-back.png"].texture)
-    this.playerCarrier.x = game.windowWidth * 0.5;
-    this.playerCarrier.y = game.windowHeight - (this.playerCarrier.height / 2 + 20);
-    this.playerCarrier.zIndex = Layers.UICards;
-    this.addChild(this.playerCarrier);
+    this.targetPlayerCarrier = new CardTarget();
+    this.targetPlayerCarrier.x = game.windowWidth * 0.5;
+    this.targetPlayerCarrier.y = game.windowHeight - (this.targetPlayerCarrier.height / 2 + 20);
+    this.addChild(this.targetPlayerCarrier);
 
     // opponent's carrier card
-    this.opponentCarrier = new Card(game.loader.resources["assets/wc-ccg-confed-back.png"].texture)
-    this.opponentCarrier.x = game.windowWidth * 0.5;
-    this.opponentCarrier.y = (this.opponentCarrier.height / 2 + 20);
-    this.opponentCarrier.zIndex = Layers.UICards;
-    this.addChild(this.opponentCarrier);
+    this.targetOpponentCarrier = new CardTarget();
+    this.targetOpponentCarrier.x = game.windowWidth * 0.5;
+    this.targetOpponentCarrier.y = (this.targetOpponentCarrier.height / 2 + 20);
+    this.addChild(this.targetOpponentCarrier);
 
     // top-left nav point card
-    this.navPointTL = new Card(game.loader.resources["assets/wc-ccg-confed-back.png"].texture);
-    this.navPointTL.angle = 90;
-    this.navPointTL.x = game.windowWidth * 0.35;
-    this.navPointTL.y = game.windowHeight * 0.3;
-    this.navPointTL.zIndex = Layers.UICards;
-    this.addChild(this.navPointTL);
+    this.targetTL = new CardTarget(90);
+    this.targetTL.x = game.windowWidth * 0.35;
+    this.targetTL.y = game.windowHeight * 0.3;
+    this.addChild(this.targetTL);
 
     // top-right nav point card
-    this.navPointTR = new Card(game.loader.resources["assets/wc-ccg-confed-back.png"].texture);
-    this.navPointTR.angle = 90;
-    this.navPointTR.x = game.windowWidth * 0.65;
-    this.navPointTR.y = game.windowHeight * 0.3;
-    this.navPointTR.zIndex = Layers.UICards;
-    this.addChild(this.navPointTR);
+    this.targetTR = new CardTarget(90);
+    this.targetTR.x = game.windowWidth * 0.65;
+    this.targetTR.y = game.windowHeight * 0.3;
+    this.addChild(this.targetTR);
     
-    // center nav point card
-    this.navPointC = new Card(game.loader.resources["assets/wc-ccg-confed-back.png"].texture);
-    this.navPointC.angle = 90;
-    this.navPointC.x = game.windowWidth * 0.5;
-    this.navPointC.y = game.windowHeight * 0.5;
-    this.navPointC.zIndex = Layers.UICards;
-    this.addChild(this.navPointC);
+    // center nav point target
+    this.targetC = new CardTarget(90);
+    this.targetC.x = game.windowWidth / 2;
+    this.targetC.y = game.windowHeight / 2;
+    this.addChild(this.targetC);
 
     // bottom-left nav point card
-    this.navPointBL = new Card(game.loader.resources["assets/wc-ccg-confed-back.png"].texture);
-    this.navPointBL.angle = 90;
-    this.navPointBL.x = game.windowWidth * 0.35;
-    this.navPointBL.y = game.windowHeight * 0.7;
-    this.navPointBL.zIndex = Layers.UICards;
-    this.addChild(this.navPointBL);
+    this.targetBL = new CardTarget(90);
+    this.targetBL.x = game.windowWidth * 0.35;
+    this.targetBL.y = game.windowHeight * 0.7;
+    this.addChild(this.targetBL);
 
     // bottom-right nav point card
-    this.navPointBR = new Card(game.loader.resources["assets/wc-ccg-confed-back.png"].texture);
-    this.navPointBR.angle = 90;
-    this.navPointBR.x = game.windowWidth * 0.65;
-    this.navPointBR.y = game.windowHeight * 0.7;
-    this.navPointBR.zIndex = Layers.UICards;
-    this.addChild(this.navPointBR);
+    this.targetBR = new CardTarget(90);
+    this.targetBR.x = game.windowWidth * 0.65;
+    this.targetBR.y = game.windowHeight * 0.7;
+    this.addChild(this.targetBR);
 
     // nav point lines
     this.navPointLines = new PIXI.Graphics();
-    this.navPointLines.lineStyle(3, Palette.BackgroundHighlight)
-      .moveTo(this.opponentCarrier.x, this.opponentCarrier.y)
-      .lineTo(this.navPointTL.x, this.navPointTL.y)
-      .lineTo(this.navPointC.x, this.navPointC.y)
-      .lineTo(this.opponentCarrier.x, this.opponentCarrier.y)
-      .lineTo(this.navPointTR.x, this.navPointTR.y)
-      .lineTo(this.navPointC.x, this.navPointC.y)
-      .lineTo(this.navPointBL.x, this.navPointBL.y)
-      .lineTo(this.navPointTL.x, this.navPointTL.y)
-      .moveTo(this.navPointTR.x, this.navPointTR.y)
-      .lineTo(this.navPointBR.x, this.navPointBR.y)
-      .lineTo(this.navPointC.x, this.navPointC.y)
-      .lineTo(this.playerCarrier.x, this.playerCarrier.y)
-      .lineTo(this.navPointBL.x, this.navPointBL.y)
-      .moveTo(this.navPointBR.x, this.navPointBR.y)
-      .lineTo(this.playerCarrier.x, this.playerCarrier.y)
+    this.navPointLines.lineStyle(3, Palette.BackgroundMedium)
+      .moveTo(this.targetOpponentCarrier.x, this.targetOpponentCarrier.y)
+      .lineTo(this.targetTL.x, this.targetTL.y)
+      .lineTo(this.targetC.x, this.targetC.y)
+      .lineTo(this.targetOpponentCarrier.x, this.targetOpponentCarrier.y)
+      .lineTo(this.targetTR.x, this.targetTR.y)
+      .lineTo(this.targetC.x, this.targetC.y)
+      .lineTo(this.targetBL.x, this.targetBL.y)
+      .lineTo(this.targetTL.x, this.targetTL.y)
+      .moveTo(this.targetTR.x, this.targetTR.y)
+      .lineTo(this.targetBR.x, this.targetBR.y)
+      .lineTo(this.targetC.x, this.targetC.y)
+      .lineTo(this.targetPlayerCarrier.x, this.targetPlayerCarrier.y)
+      .lineTo(this.targetBL.x, this.targetBL.y)
+      .moveTo(this.targetBR.x, this.targetBR.y)
+      .lineTo(this.targetPlayerCarrier.x, this.targetPlayerCarrier.y)
       .zIndex = Layers.UIBackground;
     this.addChild(this.navPointLines);
 
     // player's ready area
     this.playerReadyArea = new PIXI.Graphics();
-    this.playerReadyArea.lineStyle(4, Palette.BackgroundHighlight)
+    this.playerReadyArea.lineStyle(4, Palette.BackgroundMedium)
       .beginFill(0x000000, 0)
       .drawRoundedRect(game.windowWidth * 0.01, game.windowHeight * 0.615, game.windowWidth * 0.29, game.windowHeight * 0.37, 16)
       .zIndex = Layers.UIBackground;
@@ -163,7 +174,7 @@ export class UserInterface extends PIXI.Container {
 
     // opponent's ready area
     this.opponentReadyArea = new PIXI.Graphics();
-    this.opponentReadyArea.lineStyle(4, Palette.BackgroundHighlight)
+    this.opponentReadyArea.lineStyle(4, Palette.BackgroundMedium)
       .beginFill(0x000000, 0)
       .drawRoundedRect(game.windowWidth * 0.7, 15, game.windowWidth * 0.29, game.windowHeight * 0.37, 16)
       .zIndex = Layers.UIBackground;

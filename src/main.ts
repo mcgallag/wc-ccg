@@ -22,6 +22,7 @@ import * as PIXI from 'pixi.js';
 import * as WebFont from "webfontloader";
 
 import { UserInterface } from "./UserInterface";
+import { Card } from "./Card";
 
 /**
  * PIXI Application settings
@@ -63,10 +64,9 @@ export class CCG extends PIXI.Application {
   preload() {
     this.loader
       .add("assets/wc-ccg-confed-back.png")
-      .add("assets/wc-ccg-kilrathi-back.png")
       .add("assets/wc-ccg-confed-star.png")
       .add("assets/wc-ccg-kilrathi-sigil.png")
-      .add("assets/wc-ccg-kilrathi-alternate.png")
+      .add("assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg")
       .load(() => this.setup());
   }
 
@@ -76,6 +76,13 @@ export class CCG extends PIXI.Application {
   setup() {
     this._ui = new UserInterface();
     this.stage.addChild(this._ui);
+
+    //DEBUG for card testing
+    let card = new Card(this.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture);
+    card.scale.set(0.25);
+    card.x = 200;
+    card.y = 200;
+    this.stage.addChild(card);
   }
 }
 

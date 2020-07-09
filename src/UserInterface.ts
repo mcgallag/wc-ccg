@@ -20,6 +20,7 @@ import { game } from "./main";
 import { Palette, Layers } from "./Global";
 import * as PIXI from 'pixi.js';
 import gsap from "gsap";
+import { Card } from "./Card";
 
 enum Phase {
   Draw = "Draw",
@@ -39,6 +40,9 @@ const phaseIndicatorTextStyle = new PIXI.TextStyle({
   fill: Palette.Highlight
 });
 
+/**
+ * Indicates which turn phase it is
+ */
 class PhaseIndicator extends PIXI.Container {
   private _currentPhase: PIXI.Text;
   private _nextPhase: PIXI.Text;
@@ -128,24 +132,47 @@ class PhaseIndicator extends PIXI.Container {
 /**
  * Displays a target for card drag and drop
  * No interactivity currently implemented
+ * - refactored base class to container and added card sprite 7/9/2020 mcg
  */
-class CardTarget extends PIXI.Graphics {
-  // private _card: Card | null = null;
+class CardTarget extends PIXI.Container {
+  private _cardSprite: PIXI.Sprite | null = null;
+
+  private _width: number =  108;
+  private _height: number = 158;
 
   /**
    * 
    * @param angle number of degrees by which to rotate
    */
   constructor(angle: number = 0) {
-    const width = 108;
-    const height = 158;
     super();
-    this.lineStyle(4, Palette.BackgroundHightlight)
-      .beginFill(Palette.Background)
-      .drawRoundedRect(0, 0, width, height, 4);
-    this.pivot.set(width / 2, height / 2);
     this.angle = angle;
+    let border = new PIXI.Graphics();
+    border.lineStyle(4, Palette.BackgroundHightlight)
+      .beginFill(Palette.Background)
+      .drawRoundedRect(0, 0, this._width, this._height, 4);
+    border.pivot.set(this._width / 2, this._height / 2);
+    this.addChild(border);
     this.zIndex = Layers.UIBackground+1;
+
+    //DEBUG for card testing
+    this.SetCard(new Card(game.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture))
+  }
+
+  // sets the card target's contents to a specific card texture
+  public SetCard(card: Card): void {
+    if (this._cardSprite) {
+      this.removeChild(this._cardSprite);
+      this._cardSprite.destroy();
+    }
+    this._cardSprite = new PIXI.Sprite(card.texture);
+    this._cardSprite.width = this._width - 1;
+    this._cardSprite.height = this._height - 2;
+    this._cardSprite.x -= (this._width / 2 - 1);
+    this._cardSprite.y -= (this.height / 2 - 3);
+    this._cardSprite.zIndex = Layers.UIBackground;
+
+    this.addChild(this._cardSprite);
   }
 }
 

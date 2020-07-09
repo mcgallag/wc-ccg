@@ -36,8 +36,8 @@ export class Card extends PIXI.Sprite {
   private _drag: boolean = false;
   private _pointerOffset: PIXI.Point = new PIXI.Point();
 
-  static DefaultScale = 0.4;
-  static ZoomScale = 0.45;
+  static DefaultScale = 0.25;
+  static ZoomScale = 0.28;
 
   /**
    * Creates a sprite and sets interaction events
@@ -49,10 +49,10 @@ export class Card extends PIXI.Sprite {
     this.scale.set(Card.DefaultScale);
 
     this.interactive = true;
-    // this.on("pointerdown", (evt: PIXI.InteractionEvent) => this.onPointerDown(evt.data));
-    // this.on("pointerup", (evt: PIXI.InteractionEvent) => this.onPointerUp(evt.data));
-    // this.on("pointerupoutside", (evt: PIXI.InteractionEvent) => this.onPointerUp(evt.data));
-    // this.on("pointermove", (evt: PIXI.InteractionEvent) => this.onPointerMove(evt.data));
+    this.on("pointerdown", (evt: PIXI.InteractionEvent) => this.onPointerDown(evt.data));
+    this.on("pointerup", (evt: PIXI.InteractionEvent) => this.onPointerUp(evt.data));
+    this.on("pointerupoutside", (evt: PIXI.InteractionEvent) => this.onPointerUp(evt.data));
+    this.on("pointermove", (evt: PIXI.InteractionEvent) => this.onPointerMove(evt.data));
     this.on("mouseover", () => this.onMouseOver());
     this.on("mouseout", () => this.onMouseOut());
   }

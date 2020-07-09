@@ -62,6 +62,7 @@ export class CCG extends PIXI.Application {
    * Loads resources and performs other preload processes
    */
   preload() {
+    this.loader.baseUrl = document.URL;
     this.loader
       .add("assets/wc-ccg-confed-back.png")
       .add("assets/wc-ccg-confed-star.png")

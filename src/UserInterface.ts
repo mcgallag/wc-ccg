@@ -21,6 +21,110 @@ import { Palette, Layers } from "./Global";
 import * as PIXI from 'pixi.js';
 import gsap from "gsap";
 
+enum Phase {
+  Draw = "Draw",
+  Muster = "Muster",
+  Scramble = "Scramble",
+  Movement = "Movement",
+  Combat =  "Combat",
+  Discard = "Discard"
+}
+
+/**
+ * Style for phase indicator text
+ */
+const phaseIndicatorTextStyle = new PIXI.TextStyle({
+  fontFamily: "Audiowide",
+  fontSize: 24,
+  fill: Palette.Highlight
+});
+
+class PhaseIndicator extends PIXI.Container {
+  private _currentPhase: PIXI.Text;
+  private _nextPhase: PIXI.Text;
+  private _border: PIXI.Graphics;
+  private _phaseMask: PIXI.Graphics;
+
+  private readonly _fixedWidth = 146;
+
+  constructor() {
+    super();
+    this.zIndex = Layers.UIBackground;
+    this._border = new PIXI.Graphics();
+    this._border.lineStyle(2, Palette.Accent)
+      .beginFill(0, 0)
+      .drawRect(0, 0, this._fixedWidth, 32);
+
+    this._phaseMask = new PIXI.Graphics();
+    this._phaseMask.beginFill(0xFFFFFF, 1)
+      .drawRect(2, 6, this._fixedWidth, 22)
+      .endFill();
+
+    this._currentPhase = new PIXI.Text(Phase.Movement, phaseIndicatorTextStyle);
+    this._currentPhase.x = (this._fixedWidth - this._currentPhase.width) / 2;
+    this._currentPhase.mask = this._phaseMask;
+
+    this._nextPhase = new PIXI.Text(Phase.Muster, phaseIndicatorTextStyle);
+    this._nextPhase.y = 32;
+    this._nextPhase.x = (this._fixedWidth - this._nextPhase.width) / 2;
+    this._nextPhase.mask = this._phaseMask;
+
+    this.addChild(this._currentPhase, this._phaseMask, this._nextPhase, this._border);
+
+    //DEBUG for testing
+    this.interactive = true;
+    this.on("click", () => this.rotatePhase());
+  }
+
+  /**
+   * Rotate display to next phase
+   */
+  private rotatePhase(): void {
+    switch (this._currentPhase.text) {
+      case "Draw":
+        this.ChangePhase(Phase.Muster);
+        break;
+      case "Muster":
+        this.ChangePhase(Phase.Scramble);
+        break;
+      case "Scramble":
+        this.ChangePhase(Phase.Movement);
+        break;
+      case "Movement":
+        this.ChangePhase(Phase.Combat);
+        break;
+      case "Combat":
+        this.ChangePhase(Phase.Discard);
+        break;
+      case "Discard":
+        this.ChangePhase(Phase.Draw);
+        break;
+    }
+  }
+
+  /**
+   * Rotate indicator to `newPhase`
+   * @param newPhase 
+   */
+  public ChangePhase(newPhase: Phase) {
+    this._nextPhase.text = newPhase;
+    this._nextPhase.x = (this._fixedWidth - this._nextPhase.width) / 2;
+
+    gsap.to(this._nextPhase, {
+      y: 0,
+      duration: 1,
+    });
+    gsap.to(this._currentPhase, {
+      y: -32,
+      duration: 1,
+      onComplete: () => {
+        [this._nextPhase, this._currentPhase] = [this._currentPhase, this._nextPhase];
+        this._nextPhase.y = 32;
+      }
+    });
+  }
+}
+
 /**
  * Displays a target for card drag and drop
  * No interactivity currently implemented
@@ -68,6 +172,9 @@ export class UserInterface extends PIXI.Container {
   private playerReadyArea: PIXI.Graphics;
   private opponentReadyArea: PIXI.Graphics;
 
+  private playerPhaseIndicator: PhaseIndicator;
+  private opponentPhaseIndicator: PhaseIndicator;
+
   /**
    * Instantiates all UI elements and adds to container
    */
@@ -89,17 +196,32 @@ export class UserInterface extends PIXI.Container {
 
     // player power points indicator
     this.playerPowerPoints = new PIXI.Text("30", powerPointsStyle);
-    this.playerPowerPoints.x = game.windowWidth * 0.43;
-    this.playerPowerPoints.y = game.windowHeight - 60;
+    this.playerPowerPoints.x = 847;
+    this.playerPowerPoints.y = 922;
     this.playerPowerPoints.zIndex = Layers.UIBackground;
     this.addChild(this.playerPowerPoints);
 
+    // player phase indicator
+    this.playerPhaseIndicator = new PhaseIndicator();
+    this.playerPhaseIndicator.x = 1023;
+    this.playerPhaseIndicator.y = 925;
+    this.playerPhaseIndicator.zIndex = Layers.UIBackground;
+    this.addChild(this.playerPhaseIndicator);
+
     // opponent power points indicator
     this.opponentPowerPoints = new PIXI.Text("30", powerPointsStyle);
-    this.opponentPowerPoints.x = game.windowWidth * 0.536;
-    this.opponentPowerPoints.y = 10;
+    this.opponentPowerPoints.x = 1021;
+    this.opponentPowerPoints.y = 13;
     this.opponentPowerPoints.zIndex = Layers.UIBackground;
     this.addChild(this.opponentPowerPoints);
+
+    // opponent phase indicator
+    this.opponentPhaseIndicator = new PhaseIndicator();
+    // console.log(Math.floor(game.windowWidth * 0.39));
+    this.opponentPhaseIndicator.x = 750;
+    this.opponentPhaseIndicator.y = 22;
+    this.opponentPhaseIndicator.zIndex = Layers.UIBackground;
+    this.addChild(this.opponentPhaseIndicator);
 
     // player's carrier card
     this.targetPlayerCarrier = new CardTarget();

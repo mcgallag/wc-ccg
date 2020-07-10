@@ -27,7 +27,7 @@ enum Phase {
   Muster = "Muster",
   Scramble = "Scramble",
   Movement = "Movement",
-  Combat =  "Combat",
+  Combat = "Combat",
   Discard = "Discard"
 }
 
@@ -134,10 +134,12 @@ class PhaseIndicator extends PIXI.Container {
  * No interactivity currently implemented
  * - refactored base class to container and added card sprite 7/9/2020 mcg
  */
-class CardTarget extends PIXI.Container {
+export class CardTarget extends PIXI.Container {
   private _cardSprite: PIXI.Sprite | null = null;
+  private _card: Card | null = null;
+  private _border: PIXI.Graphics;
 
-  private _width: number =  108;
+  private _width: number = 108;
   private _height: number = 158;
 
   /**
@@ -147,20 +149,32 @@ class CardTarget extends PIXI.Container {
   constructor(angle: number = 0) {
     super();
     this.angle = angle;
-    let border = new PIXI.Graphics();
-    border.lineStyle(4, Palette.BackgroundHightlight)
-      .beginFill(Palette.Background)
-      .drawRoundedRect(0, 0, this._width, this._height, 4);
-    border.pivot.set(this._width / 2, this._height / 2);
-    this.addChild(border);
-    this.zIndex = Layers.UIBackground+1;
+    this._border = new PIXI.Graphics();
+    this.DrawBorder();
+    this.addChild(this._border);
+    this.zIndex = Layers.UIBackground + 1;
 
-    //DEBUG for card testing
-    this.SetCard(new Card(game.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture))
+    this.interactive = true;
   }
 
-  // sets the card target's contents to a specific card texture
-  public SetCard(card: Card): void {
+  /**
+   * Refreshes the border graphics with specified color
+   * @param color 
+   * @param bg 
+   */
+  public DrawBorder(color: number = Palette.BackgroundHighlight, bg: number = Palette.Background): void {
+    this._border.clear();
+    this._border.lineStyle(4, color)
+      .beginFill(bg)
+      .drawRoundedRect(0, 0, this._width, this._height, 4);
+    this._border.pivot.set(this._width / 2, this._height / 2);
+  }
+
+  /**
+   * Displays `card` in the CardTarget
+   * @param card 
+   */
+  public DisplayCard(card: Card): void {
     if (this._cardSprite) {
       this.removeChild(this._cardSprite);
       this._cardSprite.destroy();
@@ -171,8 +185,29 @@ class CardTarget extends PIXI.Container {
     this._cardSprite.x -= (this._width / 2 - 1);
     this._cardSprite.y -= (this.height / 2 - 3);
     this._cardSprite.zIndex = Layers.UIBackground;
-
     this.addChild(this._cardSprite);
+  }
+
+  /**
+   * Sets CardTarget's contained card to `card`
+   * @param card 
+   */
+  public SetCard(card: Card): void {
+    this._card = card;
+  }
+
+  /**
+   * Removes set/displayed card
+   */
+  public ClearCard(): void {
+    if (this._cardSprite) {
+      this.removeChild(this._cardSprite);
+      this._cardSprite.destroy();
+      this._cardSprite = null;
+    }
+    if (this._card) {
+      this._card = null;
+    }
   }
 }
 
@@ -201,6 +236,18 @@ export class UserInterface extends PIXI.Container {
 
   private playerPhaseIndicator: PhaseIndicator;
   private opponentPhaseIndicator: PhaseIndicator;
+
+  public GetCardTargets(): CardTarget[] {
+    return [
+      this.targetPlayerCarrier,
+      this.targetTL,
+      this.targetTR,
+      this.targetC,
+      this.targetBL,
+      this.targetBR,
+      this.targetOpponentCarrier
+    ];
+  }
 
   /**
    * Instantiates all UI elements and adds to container
@@ -273,7 +320,7 @@ export class UserInterface extends PIXI.Container {
     this.targetTR.x = game.windowWidth * 0.65;
     this.targetTR.y = game.windowHeight * 0.3;
     this.addChild(this.targetTR);
-    
+
     // center nav point target
     this.targetC = new CardTarget(90);
     this.targetC.x = game.windowWidth / 2;

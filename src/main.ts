@@ -23,6 +23,9 @@ import * as WebFont from "webfontloader";
 
 import { UserInterface } from "./UserInterface";
 import { Card } from "./Card";
+import { InputController } from "./InputController";
+import { Palette } from "./Global";
+import { OutlineFilter } from "pixi-filters";
 
 /**
  * PIXI Application settings
@@ -42,13 +45,29 @@ export class CCG extends PIXI.Application {
   public windowHeight: number;
 
   // assert assignment, is created in setup callback after loading resources
-  private _ui!: UserInterface;
+  public ui!: UserInterface;
+  public input: InputController;
+
+  /**
+   * Display filters for general use
+   */
+  public filters = {
+    /**
+     * Outlines in Palette highlight
+     */
+    outline: new OutlineFilter(2, Palette.Bright)
+  };
 
   constructor() {
     super(config);
 
+    this.input = new InputController();
+
     this.windowWidth = window.innerWidth;
     this.windowHeight = window.innerHeight;
+
+    //TODO figure out a better way to do this?
+    this.filters.outline.padding = 2;
 
     // disable right-click menu on canvas
     this.view.addEventListener("contextmenu", (evt) => evt.preventDefault());
@@ -75,15 +94,32 @@ export class CCG extends PIXI.Application {
    * Initiates final game setup
    */
   setup() {
-    this._ui = new UserInterface();
-    this.stage.addChild(this._ui);
+    this.ui = new UserInterface();
+    this.stage.addChild(this.ui);
+
+    // map event listeners to input controller
+    this.stage.interactive = true;
+    this.stage.sortableChildren = true;
 
     //DEBUG for card testing
     let card = new Card(this.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture);
+    let card2 = new Card(this.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture);
     card.scale.set(0.25);
+    card2.scale.set(0.25);
     card.x = 200;
+    card2.x = 200;
     card.y = 200;
+    card2.y = 700;
     this.stage.addChild(card);
+    this.stage.addChild(card2);
+  }
+
+  /**
+   * Displays msg to console in Warning font (yellow)
+   * @param msg 
+   */
+  public Warning(msg: string): void {
+    console.log(`%c${msg}`, "color: yellow; font-weight: bold");
   }
 }
 

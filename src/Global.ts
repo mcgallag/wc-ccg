@@ -22,7 +22,7 @@
 export const Palette = {
   Background: 0x000010,
   BackgroundMedium: 0x1B1B36,
-  BackgroundHightlight: 0x30305F,
+  BackgroundHighlight: 0x30305F,
   Highlight: 0xD1E000,
   Bright: 0xF1FF33,
   Dim: 0x858F00,
@@ -36,4 +36,5 @@ export const Layers = {
   Background: 10,
   UIBackground: 20,
   UICards: 30,
+  Interaction: 40
 }

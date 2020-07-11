@@ -10,20 +10,18 @@
   "author": "Michael Gallagher <mcgallag@gmail.com>",
   "license": "GPL-3.0-or-later",
   "devDependencies": {
-    "clean-webpack-plugin": "^3.0.0",
+    "@types/webfontloader": "^1.6.32",
     "cross-env": "^7.0.2",
+    "css-loader": "^3.6.0",
+    "html-webpack-plugin": "^4.3.0",
+    "less": "^3.11.3",
+    "less-loader": "^6.1.2",
+    "style-loader": "^1.2.1",
     "ts-loader": "^6.2.2",
     "typescript": "^3.8.3",
     "webpack": "^4.42.1",
     "webpack-cli": "^3.3.11",
-    "webpack-dev-server": "^3.10.3",
-    "css-loader": "^3.6.0",
-    "file-loader": "^6.0.0",
-    "less": "^3.11.3",
-    "less-loader": "^6.1.2",
-    "mini-css-extract-plugin": "^0.9.0",
-    "style-loader": "^1.2.1",
-    "@types/webfontloader": "^1.6.32"
+    "webpack-dev-server": "^3.10.3"
   },
   "dependencies": {
     "gsap": "^3.3.4",

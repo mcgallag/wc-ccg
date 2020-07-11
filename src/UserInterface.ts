@@ -48,6 +48,7 @@ class PhaseIndicator extends PIXI.Container {
   private _nextPhase: PIXI.Text;
   private _border: PIXI.Graphics;
   private _phaseMask: PIXI.Graphics;
+  private _animating: boolean = false;
 
   private readonly _fixedWidth = 146;
 
@@ -77,13 +78,14 @@ class PhaseIndicator extends PIXI.Container {
 
     //DEBUG for testing
     this.interactive = true;
-    this.on("click", () => this.rotatePhase());
+    this.on("click", () => {if (!this._animating) this.rotatePhase(); });
   }
 
   /**
    * Rotate display to next phase
    */
   private rotatePhase(): void {
+    this._animating = true;
     switch (this._currentPhase.text) {
       case "Draw":
         this.ChangePhase(Phase.Muster);
@@ -124,6 +126,7 @@ class PhaseIndicator extends PIXI.Container {
       onComplete: () => {
         [this._nextPhase, this._currentPhase] = [this._currentPhase, this._nextPhase];
         this._nextPhase.y = 32;
+        this._animating = false;
       }
     });
   }

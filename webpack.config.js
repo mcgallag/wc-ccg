@@ -6,7 +6,7 @@ const config = {
   mode: isDev ? "development" : "production",
   entry: "./src/main.ts",
   output: {
-    path: path.resolve(__dirname, "dist"),
+    path: path.resolve(__dirname, "docs"),
     filename: "bundle.js",
   },
   resolve: {

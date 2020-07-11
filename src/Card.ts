@@ -18,7 +18,7 @@
 
 import * as PIXI from 'pixi.js';
 import { game } from "./main";
-import { Layers } from './Global';
+import { Layers, CardType } from './Global';
 
 /**
  * Encapsulates cards into a sprite
@@ -30,8 +30,9 @@ export class Card extends PIXI.Sprite {
   /**
    * Creates a sprite and sets interaction events
    * @param tex Texture for card
+   * @param Type Card type
    */
-  constructor(tex: PIXI.Texture) {
+  constructor(tex: PIXI.Texture, public Type: CardType) {
     super(tex);
     this.anchor.set(0.5);
     this.scale.set(Card.DefaultScale);
@@ -40,7 +41,7 @@ export class Card extends PIXI.Sprite {
     this.zIndex = Layers.UICards;
 
     // basic event lister for Card objects
-    this.on("pointerdown", (evt: PIXI.InteractionEvent) => game.input.CardDragStart(this, evt.data));
+    this.on("pointerdown", (evt: PIXI.InteractionEvent) => game.input.cardClicked(evt));
     this.on("mouseover", () => game.input.OutlineCard(this));
     this.on("mouseout", () => game.input.UnoutlineCard(this));
   }

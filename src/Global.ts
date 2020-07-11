@@ -22,11 +22,24 @@
 export const Palette = {
   Background: 0x000010,
   BackgroundMedium: 0x1B1B36,
-  BackgroundHighlight: 0x30305F,
   Highlight: 0xD1E000,
   Bright: 0xF1FF33,
-  Dim: 0x858F00,
-  Accent: 0xEE964B
+  Accent: 0xEE964B,
+  UI: {
+    BackgroundDark: 0x000010,
+    LineDim: 0x1B1B36,
+  },
+  Interaction: {
+    BrightHighlight: 0xF1FF33,
+    MediumHighlight: 0xD1E000,
+    Accent: 0xEE964B
+  },
+  NavPoint: {
+    Normal: 0x30305F,
+    Bright: 0xD1E000,
+    ValidTarget: 0x1F7A8C,
+    InvalidTarget: 0x632C34
+  }
 };
 
 /**
@@ -37,4 +50,19 @@ export const Layers = {
   UIBackground: 20,
   UICards: 30,
   Interaction: 40
+}
+
+export enum CardType {
+  NavPoint,
+  Carrier,
+  Ship,
+  Pilot,
+  Crew,
+  WeaponSystem,
+  PilotAward,
+  Modifier,
+  BattleDamage,
+  Maneuver,
+  Luck,
+  SecretOrders
 }

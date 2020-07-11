@@ -6,7 +6,8 @@
   "scripts": {
     "build": "cross-env NODE_ENV=production webpack",
     "watch": "webpack --watch",
-    "serve": "webpack-dev-server"
+    "serve": "webpack-dev-server",
+    "node": "node"
   },
   "author": "Michael Gallagher <mcgallag@gmail.com>",
   "license": "GPL-3.0-or-later",

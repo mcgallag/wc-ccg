@@ -24,7 +24,7 @@ import * as WebFont from "webfontloader";
 import { UserInterface } from "./UserInterface";
 import { Card } from "./Card";
 import { InputController } from "./InputController";
-import { Palette } from "./Global";
+import { Palette, CardType } from "./Global";
 import { OutlineFilter } from "pixi-filters";
 
 /**
@@ -103,8 +103,8 @@ export class CCG extends PIXI.Application {
     this.stage.sortableChildren = true;
 
     //DEBUG for card testing
-    let card = new Card(this.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture);
-    let card2 = new Card(this.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture);
+    let card = new Card(this.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture, CardType.Ship);
+    let card2 = new Card(this.loader.resources["assets/WCTCG_Arrow_Blue_Devil_Squadron.jpg"].texture, CardType.NavPoint);
     card.scale.set(0.25);
     card2.scale.set(0.25);
     card.x = 200;

@@ -7,17 +7,16 @@ const config = {
   entry: "./src/main.ts",
   output: {
     path: path.resolve(__dirname, "docs"),
-    filename: "bundle.js",
+    filename: "bundle.js"
   },
   resolve: {
     extensions: [".ts", ".tsx", ".js"]
   },
   module: {
-    rules: [
-      {
+    rules: [{
         test: /\.tsx?$/,
         loader: "ts-loader",
-        exclude: /node_modules/,
+        exclude: /node_modules/
       },
       {
         test: /\.less$/,
@@ -25,14 +24,21 @@ const config = {
           "style-loader",
           "css-loader",
           "less-loader"
-        ],
+        ]
+      },
+      {
+        test: /\.ttf/,
+        loader: "file-loader",
+        options: {
+          name: "assets/fonts/[name].[ext]"
+        }
       }
     ],
   },
   plugins: [
     new HtmlWebpackPlugin({
       title: "Wing Commander CCG"
-    }),
+    })
   ],
   // devServer: {
   //   contentBase: __dirname,

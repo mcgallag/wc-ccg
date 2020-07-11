@@ -9,6 +9,7 @@ const config = {
     path: path.resolve(__dirname, "docs"),
     filename: "bundle.js"
   },
+  devtool: isDev ? "inline-source-map" : false,
   resolve: {
     extensions: [".ts", ".tsx", ".js"]
   },
@@ -40,15 +41,10 @@ const config = {
       title: "Wing Commander CCG"
     })
   ],
-  // devServer: {
-  //   contentBase: __dirname,
-  //   compress: true,
-  //   port: 8080,
-  //   hot: true,
-  //   writeToDisk: true,
-  //   open: true,
-  //   liveReload: true
-  // },
+  devServer: {
+    contentBase: "./docs",
+    open: true
+  },
   optimization: {
     minimize: !isDev
   }

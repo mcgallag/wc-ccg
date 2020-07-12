@@ -73,7 +73,7 @@ export class Card extends PIXI.Sprite {
     this.interactive = true;
     this.zIndex = Layers.UICards;
 
-    this.outlineFilter = new OutlineFilter(2, Palette.Interaction.BrightHighlight);
+    this.outlineFilter = new OutlineFilter(2, Palette.UI.VeryBright);
     this.outlineFilter.padding = 0;
     this.filters = [this.outlineFilter];
 
@@ -103,7 +103,7 @@ export class Card extends PIXI.Sprite {
    * Outlines card with `color`
    * @param color 
    */
-  public Outline(color: number = Palette.Interaction.BrightHighlight): void {
+  public Outline(color: number = Palette.UI.VeryBright): void {
     this.zIndex = Layers.Interaction;
     this.Animate({
       duration: 0.2,

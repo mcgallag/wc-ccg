@@ -37,7 +37,7 @@ enum Phase {
 const phaseIndicatorTextStyle = new PIXI.TextStyle({
   fontFamily: "Audiowide",
   fontSize: 24,
-  fill: Palette.Highlight
+  fill: Palette.UI.Bright
 });
 
 /**
@@ -56,7 +56,7 @@ class PhaseIndicator extends PIXI.Container {
     super();
     this.zIndex = Layers.UIBackground;
     this._border = new PIXI.Graphics();
-    this._border.lineStyle(2, Palette.Accent)
+    this._border.lineStyle(2, Palette.UI.Accent)
       .beginFill(0, 0)
       .drawRect(0, 0, this._fixedWidth, 32);
 
@@ -182,14 +182,14 @@ export class CardTarget extends PIXI.Container {
     this._cardMask = new PIXI.Graphics();
     this._cardMask.pivot.set(this._fixedWidth / 2, this._fixedHeight / 2);
     this._cardMask.zIndex = Layers.UIBackground + 1;
-    this._cardMask.lineStyle(4, Palette.NavPoint.Normal, 0)
-      .beginFill(Palette.UI.BackgroundDark)
+    this._cardMask.lineStyle(4, Palette.UI.BackgroundMedium, 0)
+      .beginFill(Palette.UI.BackgroundBase)
       .drawRoundedRect(0, 0, this._fixedWidth, this._fixedHeight, 4)
       .endFill();
     this._cardMask.visible = false;
 
     // initial border
-    this.DrawBorder(Palette.NavPoint.Normal);
+    this.DrawBorder(Palette.UI.BackgroundMedium);
 
     this.addChild(this._border);
     this.addChild(this._cardMask);
@@ -204,7 +204,7 @@ export class CardTarget extends PIXI.Container {
 
     this._border.lineStyle(4, color)
       // if card is set, then set fill with transparency
-      .beginFill(Palette.UI.BackgroundDark, this._card ? 0 : 1)
+      .beginFill(Palette.UI.BackgroundBase, this._card ? 0 : 1)
       .drawRoundedRect(0, 0, this._fixedWidth, this._fixedHeight, 4)
       .endFill();
   }
@@ -218,7 +218,7 @@ export class CardTarget extends PIXI.Container {
 
     this._card = card;
     this._cardMask.visible = true;
-    this.DrawBorder(Palette.NavPoint.Normal);
+    this.DrawBorder(Palette.UI.BackgroundMedium);
 
     card.mask = this._cardMask;
     card.angle = 0;
@@ -288,7 +288,7 @@ export class UserInterface extends PIXI.Container {
     let powerPointsStyle = new PIXI.TextStyle({
       fontFamily: "Audiowide",
       fontSize: 32,
-      fill: Palette.Highlight
+      fill: Palette.UI.Bright
     });
 
     // player power points indicator
@@ -378,7 +378,7 @@ export class UserInterface extends PIXI.Container {
 
     // nav point lines
     this.navPointLines = new PIXI.Graphics();
-    this.navPointLines.lineStyle(3, Palette.BackgroundMedium)
+    this.navPointLines.lineStyle(3, Palette.UI.BackgroundDark)
       .moveTo(this.targetOpponentCarrier.x, this.targetOpponentCarrier.y)
       .lineTo(this.targetTL.x, this.targetTL.y)
       .lineTo(this.targetC.x, this.targetC.y)
@@ -399,7 +399,7 @@ export class UserInterface extends PIXI.Container {
 
     // player's ready area
     this.playerReadyArea = new PIXI.Graphics();
-    this.playerReadyArea.lineStyle(4, Palette.BackgroundMedium)
+    this.playerReadyArea.lineStyle(4, Palette.UI.BackgroundDark)
       .beginFill(0x000000, 0)
       .drawRoundedRect(game.windowWidth * 0.01, game.windowHeight * 0.615, game.windowWidth * 0.29, game.windowHeight * 0.37, 16)
       .zIndex = Layers.UIBackground;
@@ -407,7 +407,7 @@ export class UserInterface extends PIXI.Container {
 
     // opponent's ready area
     this.opponentReadyArea = new PIXI.Graphics();
-    this.opponentReadyArea.lineStyle(4, Palette.BackgroundMedium)
+    this.opponentReadyArea.lineStyle(4, Palette.UI.BackgroundDark)
       .beginFill(0x000000, 0)
       .drawRoundedRect(game.windowWidth * 0.7, 15, game.windowWidth * 0.29, game.windowHeight * 0.37, 16)
       .zIndex = Layers.UIBackground;

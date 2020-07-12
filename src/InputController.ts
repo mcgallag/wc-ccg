@@ -108,7 +108,7 @@ export class InputController {
       validTarget.off("pointerover", this.DISPLAY_CARD_TARGET);
       validTarget.off("pointerout", this.CLEAR_CARD_TARGET);
       validTarget.off("pointerup", this.SET_CARD_TARGET);
-      validTarget.DrawBorder(Palette.NavPoint.Normal);
+      validTarget.DrawBorder(Palette.UI.BackgroundMedium);
     })
 
     // turn off input callbacks for card dragging
@@ -152,7 +152,7 @@ export class InputController {
         target.on("pointerover", this.DISPLAY_CARD_TARGET);
         target.on("pointerout", this.CLEAR_CARD_TARGET);
         target.on("pointerup", this.SET_CARD_TARGET);
-        target.DrawBorder(Palette.NavPoint.ValidTarget);
+        target.DrawBorder(Palette.UI.Valid);
       }
     });
   }
@@ -208,7 +208,7 @@ export class InputController {
       targ.off("pointerover", this.DISPLAY_CARD_TARGET);
       targ.off("pointerout", this.CLEAR_CARD_TARGET);
       targ.off("pointerup", this.SET_CARD_TARGET);
-      targ.DrawBorder(Palette.NavPoint.Normal);
+      targ.DrawBorder(Palette.UI.BackgroundMedium);
     });
 
     // clear interaction references and restore card interaction

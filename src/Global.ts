@@ -20,25 +20,42 @@
  * Game color palette
  */
 export const Palette = {
-  Background: 0x000010,
-  BackgroundMedium: 0x1B1B36,
-  Highlight: 0xD1E000,
-  Bright: 0xF1FF33,
-  Accent: 0xEE964B,
   UI: {
-    BackgroundDark: 0x000010,
-    LineDim: 0x1B1B36,
-  },
-  Interaction: {
-    BrightHighlight: 0xF1FF33,
-    MediumHighlight: 0xD1E000,
-    Accent: 0xEE964B
-  },
-  NavPoint: {
-    Normal: 0x30305F,
+    /**
+     * Darkest color of background
+     */
+    BackgroundBase: 0x000010,
+    /**
+     * Dark shade of background for non-distracting lines and UI elements
+     */
+    BackgroundDark: 0x1B1B36,
+    /**
+     * Medium shade of background for inactive lines and UI elements
+     */
+    BackgroundMedium: 0x30305F,
+
+    /**
+     * Yellow color for immediate interactions and warnings
+     */
     Bright: 0xD1E000,
-    ValidTarget: 0x1F7A8C,
-    InvalidTarget: 0x632C34
+    /**
+     * Brighter shade of yellow for immediate interactions and warnings
+     */
+    VeryBright: 0xF1FF33,
+
+    /**
+     * Green color for valid and affirmative UI actions
+     */
+    Valid: 0x9BE564,
+    /**
+     * Red color for invalid and negative UI actions
+     */
+    Invalid: 0x632C34,
+
+    /**
+     * Orange/peach color for non-distracting accents in UI
+     */
+    Accent: 0xEE964B
   }
 };
 

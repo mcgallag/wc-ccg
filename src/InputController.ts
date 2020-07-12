@@ -4,89 +4,127 @@ import gsap from "gsap";
 import { CardTarget } from "./UserInterface";
 import { Layers, Palette } from "./Global";
 
+/**
+ * For logging input assertion failures
+ */
+class InputError extends Error {
+  constructor(obj: any) {
+    console.error("Input Assertion failed. Something weird happened! 🤔");
+    console.dir(obj);
+    console.trace();
+    super();
+  }
+}
+
+enum InteractionState {
+  Drag
+};
+
 export class InputController {
   private _selectedCard: Card | null = null;
   private _outlinedCard: Card | null = null;
   private _pointerOffset: PIXI.Point | null = null;
-  private _draggedCardTarget: CardTarget | null = null;
 
-  private readonly DRAG_CARD_CALLBACK: Function;
-  private readonly DRAG_END_CALLBACK: Function;
-  private readonly DISPLAY_CARD_TARGET_CALLBACK: Function;
-  private readonly CLEAR_CARD_TARGET_CALLBACK: Function;
-  private readonly SET_CARD_TARGET_CALLBACK: Function;
+  //FIXME Find a better way of doing this
+  private readonly DRAG_CARD: Function;
+  private readonly DRAG_END: Function;
+  private readonly DRAG_CANCEL: Function;
+  private readonly DISPLAY_CARD_TARGET: Function;
+  private readonly CLEAR_CARD_TARGET: Function;
+  private readonly SET_CARD_TARGET: Function;
+
+  /**
+   * Current interaction state
+   */
+  private _state: InteractionState;
 
   constructor() {
-    this.DRAG_CARD_CALLBACK = (evt: PIXI.InteractionEvent) => {
-      this.DragCard(evt.data);
+    //DEBUG - testing card drag inputs
+    this._state = InteractionState.Drag;
+
+    this.DRAG_CARD = (evt: PIXI.InteractionEvent) => {
+      this._dragSelectedCard(evt.data);
     };
-    this.DRAG_END_CALLBACK = (evt: PIXI.InteractionEvent) => {
-      this.CardDragEnd(evt.data);
+    this.DRAG_END = (evt: PIXI.InteractionEvent) => {
+      this._dragStop();
     };
-    this.DISPLAY_CARD_TARGET_CALLBACK = (evt: PIXI.InteractionEvent) => {
+    this.DRAG_CANCEL = (evt: PIXI.InteractionEvent) => {
+      //TODO - implement some kind of cancel snapback
+      this._dragStop();
+    }
+    this.DISPLAY_CARD_TARGET = (evt: PIXI.InteractionEvent) => {
       if (evt.currentTarget instanceof CardTarget) {
-        this.DisplayCardInTarget(evt.currentTarget);
+        if (this._selectedCard !== null) {
+          this._snapCardToTarget(this._selectedCard, evt.currentTarget);
+        }
       }
     };
-    this.CLEAR_CARD_TARGET_CALLBACK = (evt: PIXI.InteractionEvent) => {
-      this.RemoveCardFromTarget();
+    this.CLEAR_CARD_TARGET = (evt: PIXI.InteractionEvent) => {
+      if (evt.currentTarget instanceof CardTarget) {
+        if (this._selectedCard !== null) {
+          this._snapCardFromTarget(this._selectedCard, evt.currentTarget);
+        }
+      }
     };
-    this.SET_CARD_TARGET_CALLBACK = (evt: PIXI.InteractionEvent) => {
-      this.SetCardInTarget();
+    this.SET_CARD_TARGET = (evt: PIXI.InteractionEvent) => {
+      if (evt.currentTarget instanceof CardTarget) {
+        if (this._selectedCard !== null) {
+          this._setCardInTarget(this._selectedCard, evt.currentTarget);
+        }
+      }
     }
   }
 
   /**
-   * Displays selected Card sprite in CardTarget object
+   * Snaps dragged `card` into `target`
    * @param target 
+   * @param card
    */
-  DisplayCardInTarget(target: CardTarget) {
-    if (this._selectedCard) {
-      target.DisplayCard(this._selectedCard);
-      target.DrawBorder(Palette.Highlight);
-      this._draggedCardTarget = target;
-      this._selectedCard.visible = false;
-    } else {
-      game.Warning("DisplayCardInTarget called but _selectedCard is null!");
-    }
+  private _snapCardToTarget(card: Card, target: CardTarget) {
+    if (!target.Accepts(card.Type)) return;
+
+    //TODO add gsap tween
+    card.angle = target.angle;
+    card.height = target.height * 0.98;
+    card.width = target.width * 0.98;
   }
 
   /**
-   * Completes drag event and sets the card into the CardTarget
+   * Called when player releases mouse dragging `card` over a valid `target`
+   * - Assumed `card` is valid type for `target`
+   * 
+   * @param card card being dragged by player
+   * @param target accepts `card` type
    */
-  SetCardInTarget(): void {
-    if (this._selectedCard && this._draggedCardTarget) {
-      this._draggedCardTarget.SetCard(this._selectedCard);
-      this._draggedCardTarget.DrawBorder();
-      this._draggedCardTarget = null;
-      let draggedCardReference = this._selectedCard;
-      this.CardDragEnd();
-      draggedCardReference.parent.removeChild(draggedCardReference);
-      draggedCardReference.destroy();
-      this._outlinedCard = null;
-    } else {
-      let nullPart = "";
-      if (!this._selectedCard) nullPart += "_selectedCard ";
-      if (!this._draggedCardTarget) nullPart += "_draggedCardTarget";
-      game.Warning(`SetCardInTarget called but ${nullPart}is null!`);
-    }
+  private _setCardInTarget(card: Card, target: CardTarget): void {
+    // force remove outline filter from Card sprite
+    card.filters = [];
+    this._outlinedCard = null;
+
+    // lock card into the target
+    target.SetCard(card);
+
+    // turn off input callbacks for CardTargets
+    game.ui.GetTargetsByType(card.Type).forEach(validTarget => {
+      validTarget.off("pointerover", this.DISPLAY_CARD_TARGET);
+      validTarget.off("pointerout", this.CLEAR_CARD_TARGET);
+      validTarget.off("pointerup", this.SET_CARD_TARGET);
+      validTarget.DrawBorder(Palette.NavPoint.Normal);
+    })
+
+    // turn off input callbacks for card dragging
+    game.stage.off("pointermove", this.DRAG_CARD);
+    game.stage.off("pointerup", this.DRAG_END);
+    game.stage.off("pointerupoutside", this.DRAG_CANCEL);
   }
 
   /**
    * Clears dragged card from current CardTarget
    */
-  RemoveCardFromTarget(): void {
-    if (this._selectedCard && this._draggedCardTarget) {
-      this._draggedCardTarget.ClearCard();
-      this._draggedCardTarget.DrawBorder();
-      this._draggedCardTarget = null;
-      this._selectedCard.visible = true;
-    } else {
-      let nullPart = "";
-      if (!this._selectedCard) nullPart += "_selectedCard ";
-      if (!this._draggedCardTarget) nullPart += "_draggedCardTarget ";
-      game.Warning(`RemoveCardFromTarget called but ${nullPart} is null!`);
-    }
+  private _snapCardFromTarget(card: Card, target: CardTarget): void {
+    //TODO add gsap tween
+    card.angle = 0;
+    card.scale.set(Card.ZoomScale);
   }
 
   /**
@@ -124,61 +162,39 @@ export class InputController {
   }
 
   /**
-   * Begins drag event on `card`
-   * @param card dragged card
-   * @param event interaction event data
+   * Begins drag card interaction
+   * @param card clicked card
+   * @param clickOffset event coordinates local to `card`
    */
-  CardDragStart(card: Card, event: PIXI.InteractionData): void {
+  private startCardDrag(card: Card, clickOffset: PIXI.Point): void {
     this._selectedCard = card;
     this._selectedCard.interactive = false;
-    this._pointerOffset = event.getLocalPosition(card);
+
+    this._pointerOffset = clickOffset;
     this._pointerOffset.x *= card.scale.x;
     this._pointerOffset.y *= card.scale.y;
 
-    // add callbacks for future mouse events to game stage
-    game.stage.on("pointermove", this.DRAG_CARD_CALLBACK);
-    game.stage.on("pointerup", this.DRAG_END_CALLBACK);
-    game.stage.on("pointerupoutside", this.DRAG_END_CALLBACK);
+    // add callbacks for drag mouse events
+    game.stage.on("pointermove", this.DRAG_CARD);
+    game.stage.on("pointerup", this.DRAG_END);
+    game.stage.on("pointerupoutside", this.DRAG_CANCEL);
 
-    // add callbacks to CardTargets
-    game.ui.GetCardTargets().forEach(targ => {
-      targ.on("pointerover", this.DISPLAY_CARD_TARGET_CALLBACK);
-      targ.on("pointerout", this.CLEAR_CARD_TARGET_CALLBACK);
-      targ.on("pointerup", this.SET_CARD_TARGET_CALLBACK);
+    // add callbacks for valid card targets
+    game.ui.GetTargetsByType(card.Type).forEach(target => {
+      if (target.Card === null) {
+        target.on("pointerover", this.DISPLAY_CARD_TARGET);
+        target.on("pointerout", this.CLEAR_CARD_TARGET);
+        target.on("pointerup", this.SET_CARD_TARGET);
+        target.DrawBorder(Palette.NavPoint.ValidTarget);
+      }
     });
   }
 
   /**
-   * Ends drag event
-   * @param event 
-   */
-  CardDragEnd(event?: PIXI.InteractionData): void {
-    if (this._selectedCard) {
-      // clear interaction references
-      this._selectedCard.interactive = true;
-      this._selectedCard = null;
-
-      // clear callbacks to game stage
-      game.stage.off("pointermove", this.DRAG_CARD_CALLBACK);
-      game.stage.off("pointerup", this.DRAG_END_CALLBACK);
-      game.stage.off("pointerupoutside", this.DRAG_END_CALLBACK);
-
-      // clear callbacks to card targets
-      game.ui.GetCardTargets().forEach(targ => {
-        targ.off("pointerover", this.DISPLAY_CARD_TARGET_CALLBACK);
-        targ.off("pointerout", this.CLEAR_CARD_TARGET_CALLBACK);
-        targ.off("pointerup", this.SET_CARD_TARGET_CALLBACK);
-      });
-    } else {
-      game.Warning("CardDragEnd called but _selectedCard is null!");
-    }
-  }
-
-  /**
-   * Drag callback for mouse movement
+   * Callback for mouse movement while a card is being dragged
    * @param data 
    */
-  DragCard(data: PIXI.InteractionData): void {
+  private _dragSelectedCard(data: PIXI.InteractionData): void {
     if (this._selectedCard && this._pointerOffset) {
       // calculate new coordinates and adjust position
       let point = data.getLocalPosition(game.stage);
@@ -190,5 +206,46 @@ export class InputController {
       if (!this._pointerOffset) nullpart += "_pointerOffset ";
       game.Warning(`DragCard called but ${nullpart}is null!`);
     }
+  }
+
+  /**
+   * Begins drag event on `card`
+   * @param card dragged card
+   * @param event interaction event data
+   */
+  public cardClicked(evt: PIXI.InteractionEvent): void {
+    if (!(evt.currentTarget instanceof Card)) throw new InputError(evt.currentTarget);
+
+    // determine interaction based on current input state
+    switch (this._state) {
+      case InteractionState.Drag:
+        this.startCardDrag(evt.currentTarget, evt.data.getLocalPosition(evt.currentTarget));
+        break;
+    }
+  }
+
+  /**
+   * Completes drag event successfully at point
+   * @param event 
+   */
+  private _dragStop(): void {
+    if (!this._selectedCard) throw new InputError("_selectedCard is null!");
+
+    // clear callbacks to game stage
+    game.stage.off("pointermove", this.DRAG_CARD);
+    game.stage.off("pointerup", this.DRAG_END);
+    game.stage.off("pointerupoutside", this.DRAG_CANCEL);
+
+    // clear callbacks to card targets
+    game.ui.GetTargetsByType(this._selectedCard.Type).forEach(targ => {
+      targ.off("pointerover", this.DISPLAY_CARD_TARGET);
+      targ.off("pointerout", this.CLEAR_CARD_TARGET);
+      targ.off("pointerup", this.SET_CARD_TARGET);
+      targ.DrawBorder(Palette.NavPoint.Normal);
+    });
+
+    // clear interaction references and restore card interaction
+    this._selectedCard.interactive = true;
+    this._selectedCard = null;
   }
 }

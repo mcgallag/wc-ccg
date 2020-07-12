@@ -17,7 +17,7 @@
  */
 
 import { game } from "./main";
-import { Palette, Layers } from "./Global";
+import { Palette, Layers, CardType } from "./Global";
 import * as PIXI from 'pixi.js';
 import gsap from "gsap";
 import { Card } from "./Card";
@@ -75,10 +75,10 @@ class PhaseIndicator extends PIXI.Container {
     this._nextPhase.mask = this._phaseMask;
 
     this.addChild(this._currentPhase, this._phaseMask, this._nextPhase, this._border);
-
+    
     //DEBUG for testing
     this.interactive = true;
-    this.on("click", () => {if (!this._animating) this.rotatePhase(); });
+    this.on("click", () => { if (!this._animating) this.rotatePhase(); });
   }
 
   /**
@@ -134,61 +134,79 @@ class PhaseIndicator extends PIXI.Container {
 
 /**
  * Displays a target for card drag and drop
- * No interactivity currently implemented
  * - refactored base class to container and added card sprite 7/9/2020 mcg
+ * - removed separate card sprite and refactored card interaction 7/12/2020 mcg
  */
 export class CardTarget extends PIXI.Container {
-  private _cardSprite: PIXI.Sprite | null = null;
   private _card: Card | null = null;
-  private _border: PIXI.Graphics;
+  private readonly _border: PIXI.Graphics;
+  private readonly _cardMask: PIXI.Graphics;
+  private readonly _validTypes: CardType[];
 
-  private _width: number = 108;
-  private _height: number = 158;
+  private _fixedWidth: number = 108;
+  private _fixedHeight: number = 158;
+
+  /** 
+   * currently held card or `null` if empty
+   */
+  get Card(): Card | null {
+    return this._card;
+  }
+
+  /**
+   * true if CardTarget accepts the provided `type`
+   * @param type 
+   */
+  public Accepts(type: CardType): boolean {
+    return this._validTypes.includes(type);
+  }
 
   /**
    * 
-   * @param angle number of degrees by which to rotate
+   * @param type valid card type
+   * @param rest (optional) additional types
    */
-  constructor(angle: number = 0) {
+  constructor(type: CardType, ...rest: CardType[]) {
     super();
-    this.angle = angle;
-    this._border = new PIXI.Graphics();
-    this.DrawBorder();
-    this.addChild(this._border);
     this.zIndex = Layers.UIBackground + 1;
-
+    this.sortableChildren = true;
     this.interactive = true;
+
+    this._validTypes = [type, ...rest];
+
+    this._border = new PIXI.Graphics();
+    this._border.pivot.set(this._fixedWidth / 2, this._fixedHeight / 2);
+    this._border.zIndex = Layers.UIBackground + 1;
+
+    // set up mask for clipping held card sprite
+    this._cardMask = new PIXI.Graphics();
+    this._cardMask.pivot.set(this._fixedWidth / 2, this._fixedHeight / 2);
+    this._cardMask.zIndex = Layers.UIBackground + 1;
+    this._cardMask.lineStyle(4, Palette.NavPoint.Normal, 0)
+      .beginFill(Palette.UI.BackgroundDark)
+      .drawRoundedRect(0, 0, this._fixedWidth, this._fixedHeight, 4)
+      .endFill();
+    this._cardMask.visible = false;
+
+    // initial border
+    this.DrawBorder(Palette.NavPoint.Normal);
+
+    this.addChild(this._border);
+    this.addChild(this._cardMask);
   }
 
   /**
    * Refreshes the border graphics with specified color
    * @param color 
-   * @param bg 
    */
-  public DrawBorder(color: number = Palette.BackgroundHighlight, bg: number = Palette.Background): void {
+  public DrawBorder(color: number): void {
     this._border.clear();
-    this._border.lineStyle(4, color)
-      .beginFill(bg)
-      .drawRoundedRect(0, 0, this._width, this._height, 4);
-    this._border.pivot.set(this._width / 2, this._height / 2);
-  }
 
-  /**
-   * Displays `card` in the CardTarget
-   * @param card 
-   */
-  public DisplayCard(card: Card): void {
-    if (this._cardSprite) {
-      this.removeChild(this._cardSprite);
-      this._cardSprite.destroy();
-    }
-    this._cardSprite = new PIXI.Sprite(card.texture);
-    this._cardSprite.width = this._width - 1;
-    this._cardSprite.height = this._height - 2;
-    this._cardSprite.x -= (this._width / 2 - 1);
-    this._cardSprite.y -= (this.height / 2 - 3);
-    this._cardSprite.zIndex = Layers.UIBackground;
-    this.addChild(this._cardSprite);
+    this._border.lineStyle(4, color)
+      // if card is set, then set fill with transparency
+      .beginFill(Palette.UI.BackgroundDark, this._card ? 0 : 1)
+      .drawRoundedRect(0, 0, this._fixedWidth, this._fixedHeight, 4)
+      .endFill();
   }
 
   /**
@@ -196,21 +214,21 @@ export class CardTarget extends PIXI.Container {
    * @param card 
    */
   public SetCard(card: Card): void {
-    this._card = card;
-  }
+    if (!this.Accepts(card.Type)) return;
 
-  /**
-   * Removes set/displayed card
-   */
-  public ClearCard(): void {
-    if (this._cardSprite) {
-      this.removeChild(this._cardSprite);
-      this._cardSprite.destroy();
-      this._cardSprite = null;
-    }
-    if (this._card) {
-      this._card = null;
-    }
+    this._card = card;
+    this._cardMask.visible = true;
+    this.DrawBorder(Palette.NavPoint.Normal);
+
+    card.mask = this._cardMask;
+    card.angle = 0;
+    card.height = this._fixedHeight;
+    card.width = this._fixedWidth;
+    card.zIndex = Layers.UIBackground;
+    card.interactive = false;
+    card.x = 0;
+    card.y = 0;
+    card.setParent(this);
   }
 }
 
@@ -223,6 +241,7 @@ export class UserInterface extends PIXI.Container {
   private playerPowerPoints: PIXI.Text;
   private opponentPowerPoints: PIXI.Text;
 
+  //TODO are these even needed? probably not
   private targetPlayerCarrier: CardTarget;
   private targetOpponentCarrier: CardTarget;
   private targetTL: CardTarget;
@@ -230,6 +249,8 @@ export class UserInterface extends PIXI.Container {
   private targetC: CardTarget;
   private targetBL: CardTarget;
   private targetBR: CardTarget;
+
+  private targets: CardTarget[] = [];
 
   //TODO: break up into individual lines so we can highlight individually later
   private navPointLines: PIXI.Graphics;
@@ -240,16 +261,15 @@ export class UserInterface extends PIXI.Container {
   private playerPhaseIndicator: PhaseIndicator;
   private opponentPhaseIndicator: PhaseIndicator;
 
-  public GetCardTargets(): CardTarget[] {
-    return [
-      this.targetPlayerCarrier,
-      this.targetTL,
-      this.targetTR,
-      this.targetC,
-      this.targetBL,
-      this.targetBR,
-      this.targetOpponentCarrier
-    ];
+  /**
+   * Returns an array of CardTarget valid for `type`
+   * @param type required card type
+   * @param inverse if set, returns targets that don't accept
+   */
+  public GetTargetsByType(type: CardType, inverse: boolean = false): CardTarget[] {
+    return this.targets.filter((targ) => {
+      return inverse ? !targ.Accepts(type) : targ.Accepts(type);
+    });
   }
 
   /**
@@ -301,46 +321,60 @@ export class UserInterface extends PIXI.Container {
     this.addChild(this.opponentPhaseIndicator);
 
     // player's carrier card
-    this.targetPlayerCarrier = new CardTarget();
+    //DEBUG remove the ship type
+    this.targetPlayerCarrier = new CardTarget(CardType.Carrier, CardType.Ship);
     this.targetPlayerCarrier.x = game.windowWidth * 0.5;
     this.targetPlayerCarrier.y = game.windowHeight - (this.targetPlayerCarrier.height / 2 + 20);
     this.addChild(this.targetPlayerCarrier);
+    this.targets.push(this.targetPlayerCarrier);
 
     // opponent's carrier card
-    this.targetOpponentCarrier = new CardTarget();
+    this.targetOpponentCarrier = new CardTarget(CardType.Carrier);
     this.targetOpponentCarrier.x = game.windowWidth * 0.5;
     this.targetOpponentCarrier.y = (this.targetOpponentCarrier.height / 2 + 20);
     this.addChild(this.targetOpponentCarrier);
+    this.targets.push(this.targetOpponentCarrier);
 
     // top-left nav point card
-    this.targetTL = new CardTarget(90);
+    this.targetTL = new CardTarget(CardType.NavPoint);
+    this.targetTL.angle = 90;
     this.targetTL.x = game.windowWidth * 0.35;
     this.targetTL.y = game.windowHeight * 0.3;
     this.addChild(this.targetTL);
+    this.targets.push(this.targetTL);
 
     // top-right nav point card
-    this.targetTR = new CardTarget(90);
+    this.targetTR = new CardTarget(CardType.NavPoint);
+    this.targetTR.angle = 90;
     this.targetTR.x = game.windowWidth * 0.65;
     this.targetTR.y = game.windowHeight * 0.3;
     this.addChild(this.targetTR);
+    this.targets.push(this.targetTR);
 
     // center nav point target
-    this.targetC = new CardTarget(90);
+    //DEBUG: remove the ship type
+    this.targetC = new CardTarget(CardType.NavPoint, CardType.Ship);
+    this.targetC.angle = 90;
     this.targetC.x = game.windowWidth / 2;
     this.targetC.y = game.windowHeight / 2;
     this.addChild(this.targetC);
+    this.targets.push(this.targetC);
 
     // bottom-left nav point card
-    this.targetBL = new CardTarget(90);
+    this.targetBL = new CardTarget(CardType.NavPoint);
+    this.targetBL.angle = 90;
     this.targetBL.x = game.windowWidth * 0.35;
     this.targetBL.y = game.windowHeight * 0.7;
     this.addChild(this.targetBL);
+    this.targets.push(this.targetBL);
 
     // bottom-right nav point card
-    this.targetBR = new CardTarget(90);
+    this.targetBR = new CardTarget(CardType.NavPoint);
+    this.targetBR.angle = 90;
     this.targetBR.x = game.windowWidth * 0.65;
     this.targetBR.y = game.windowHeight * 0.7;
     this.addChild(this.targetBR);
+    this.targets.push(this.targetBR);
 
     // nav point lines
     this.navPointLines = new PIXI.Graphics();

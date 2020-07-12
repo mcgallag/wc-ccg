@@ -66,3 +66,12 @@ export enum CardType {
   Luck,
   SecretOrders
 }
+
+export interface TweenConfig {
+  /**
+   * duration in seconds
+   */
+  duration: number,
+  ease: string,
+  [others: string]: any
+}

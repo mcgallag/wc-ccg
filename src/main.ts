@@ -24,8 +24,7 @@ import * as WebFont from "webfontloader";
 import { UserInterface } from "./UserInterface";
 import { Card } from "./Card";
 import { InputController } from "./InputController";
-import { Palette, CardType } from "./Global";
-import { OutlineFilter } from "pixi-filters";
+import { CardType } from "./Global";
 
 /**
  * PIXI Application settings
@@ -48,16 +47,6 @@ export class CCG extends PIXI.Application {
   public ui!: UserInterface;
   public input: InputController;
 
-  /**
-   * Display filters for general use
-   */
-  public filters = {
-    /**
-     * Outlines in Palette highlight
-     */
-    outline: new OutlineFilter(2, Palette.Bright)
-  };
-
   constructor() {
     super(config);
 
@@ -65,9 +54,6 @@ export class CCG extends PIXI.Application {
 
     this.windowWidth = window.innerWidth;
     this.windowHeight = window.innerHeight;
-
-    //TODO figure out a better way to do this?
-    this.filters.outline.padding = 2;
 
     // disable right-click menu on canvas
     this.view.addEventListener("contextmenu", (evt) => evt.preventDefault());

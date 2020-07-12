@@ -18,7 +18,9 @@
 
 import * as PIXI from 'pixi.js';
 import { game } from "./main";
-import { Layers, CardType } from './Global';
+import { gsap } from "gsap";
+import { Layers, CardType, TweenConfig, Palette } from './Global';
+import { OutlineFilter } from 'pixi-filters';
 
 /**
  * Encapsulates cards into a sprite
@@ -26,6 +28,37 @@ import { Layers, CardType } from './Global';
 export class Card extends PIXI.Sprite {
   static DefaultScale = 0.25;
   static ZoomScale = 0.28;
+  private outlineFilter: OutlineFilter;
+
+  /**
+   * Exposes sprite scale for both x and y to one variable
+   * @property
+   */
+  set cardScale(value: number) {
+    this.scale.x = value;
+    this.scale.y = value;
+  }
+  get cardScale(): number {
+    return this.scale.x;
+  }
+
+  /**
+   * Exposes outline filter padding
+   * - is this terrible inefficient or bad performance-wise?
+   */
+  // HACK
+  // sometimes there's a sliver of outline left even after
+  // the filter padding gets specifically set to zero
+  // probably some webgl thing
+  // just shunt it to -1 anytime it gets set to 0
+  set borderWidth(value: number) {
+    this.outlineFilter.padding = (value <= 0) ? -1 : value;
+  }
+  get borderWidth(): number {
+    return (this.outlineFilter.padding <= 0) ? 0 : this.outlineFilter.padding;
+  }
+
+  private _tween: gsap.core.Tween | null = null;
 
   /**
    * Creates a sprite and sets interaction events
@@ -40,9 +73,69 @@ export class Card extends PIXI.Sprite {
     this.interactive = true;
     this.zIndex = Layers.UICards;
 
-    // basic event lister for Card objects
+    this.outlineFilter = new OutlineFilter(2, Palette.Interaction.BrightHighlight);
+    this.outlineFilter.padding = 0;
+    this.filters = [this.outlineFilter];
+
+    // basic event listeners for Card objects
     this.on("pointerdown", (evt: PIXI.InteractionEvent) => game.input.cardClicked(evt));
-    this.on("mouseover", () => game.input.OutlineCard(this));
-    this.on("mouseout", () => game.input.UnoutlineCard(this));
+    this.on("mouseover", () => {
+      this.zIndex = Layers.Interaction;
+      this.Animate({
+        duration: 0.1,
+        ease: "linear",
+        borderWidth: 2,
+        cardScale: Card.ZoomScale
+      });
+    });
+    this.on("mouseout", () => {
+      this.zIndex = Layers.UICards;
+      this.Animate({
+        duration: 0.1,
+        ease: "linear",
+        borderWidth: 0,
+        cardScale: Card.DefaultScale
+      });
+    });
+  }
+
+  /**
+   * Outlines card with `color`
+   * @param color 
+   */
+  public Outline(color: number = Palette.Interaction.BrightHighlight): void {
+    this.zIndex = Layers.Interaction;
+    this.Animate({
+      duration: 0.2,
+      ease: "power2",
+      borderWidth: 2
+    });
+  }
+
+  /**
+   * Removes card outline
+   */
+  public Unoutline(): void {
+    this.zIndex = Layers.UICards;
+    this.Animate({
+      duration: 0.2,
+      ease: "power2",
+      borderWidth: 0
+    });
+  }
+
+  /**
+   * Queues animation described by `config`
+   * @param config 
+   */
+  //TODO figure out how gsap works because surely it does this for you
+  public Animate(config: TweenConfig): void {
+    if (this._tween == null) {
+      this._tween = gsap.to(this, config);
+    } else {
+      this._tween.then(() => {
+        this._tween = gsap.to(this, config);
+      });
+    }
   }
 }

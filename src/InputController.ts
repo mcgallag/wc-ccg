@@ -1,8 +1,7 @@
 import { game } from "./main";
 import { Card } from "./Card";
-import gsap from "gsap";
 import { CardTarget } from "./UserInterface";
-import { Layers, Palette } from "./Global";
+import { Palette } from "./Global";
 
 /**
  * For logging input assertion failures
@@ -21,11 +20,11 @@ enum InteractionState {
 };
 
 export class InputController {
+  // Do not delete this, Mike. You actually need it
   private _selectedCard: Card | null = null;
-  private _outlinedCard: Card | null = null;
   private _pointerOffset: PIXI.Point | null = null;
 
-  //FIXME Find a better way of doing this
+  //TODO Find a better way of doing this
   private readonly DRAG_CARD: Function;
   private readonly DRAG_END: Function;
   private readonly DRAG_CANCEL: Function;
@@ -83,10 +82,13 @@ export class InputController {
   private _snapCardToTarget(card: Card, target: CardTarget) {
     if (!target.Accepts(card.Type)) return;
 
-    //TODO add gsap tween
-    card.angle = target.angle;
-    card.height = target.height * 0.98;
-    card.width = target.width * 0.98;
+    card.Animate({
+      angle: target.angle,
+      height: target.height * 0.98,
+      width: target.width * 0.98,
+      duration: 0.3,
+      ease: "power4"
+    });
   }
 
   /**
@@ -97,11 +99,8 @@ export class InputController {
    * @param target accepts `card` type
    */
   private _setCardInTarget(card: Card, target: CardTarget): void {
-    // force remove outline filter from Card sprite
-    card.filters = [];
-    this._outlinedCard = null;
-
     // lock card into the target
+    card.Unoutline();
     target.SetCard(card);
 
     // turn off input callbacks for CardTargets
@@ -122,45 +121,13 @@ export class InputController {
    * Clears dragged card from current CardTarget
    */
   private _snapCardFromTarget(card: Card, target: CardTarget): void {
-    //TODO add gsap tween
-    card.angle = 0;
-    card.scale.set(Card.ZoomScale);
+    card.Animate({
+      angle: 0,
+      cardScale: Card.ZoomScale,
+      duration: 0.3,
+      ease: "power4"
+    });
   }
-
-  /**
-   * Outlines and does initial zoom on `card`
-   * @param card 
-   */
-  OutlineCard(card: Card): void {
-    if (!this._outlinedCard) {
-      this._outlinedCard = card;
-      card.filters = [game.filters.outline];
-      card.zIndex = Layers.Interaction;
-      gsap.to(card.scale, {
-        x: Card.ZoomScale,
-        y: Card.ZoomScale,
-        duration: 0.2
-      });
-    }
-  }
-
-  /**
-   * Removes outline and removes zoom from `card`
-   * @param card 
-   */
-  UnoutlineCard(card: Card): void {
-    if (this._outlinedCard && card == this._outlinedCard) {
-      this._outlinedCard = null;
-      card.filters = [];
-      card.zIndex = Layers.UICards;
-      gsap.to(card.scale, {
-        x: Card.DefaultScale,
-        y: Card.DefaultScale,
-        duration: 0.2
-      });
-    }
-  }
-
   /**
    * Begins drag card interaction
    * @param card clicked card
